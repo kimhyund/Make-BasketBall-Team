@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC 
+"-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="www.cwb.com.party.Map.mapper.MapMapper">
+	<resultMap id="rm4MapVO"
+		type="www.cwb.com.party.Map.vo.MapVO">
+		<id property="id" column="id" />
+		<result property="name" column="name" />
+		<result property="half_court_num" column="half_court_num" />
+		<result property="full_court_num" column="full_court_num" />
+		<result property="address" column="address" />
+		<result property="user_id" column="user_id" />
+		<result property="content" column="content" />
+		<result property="reg_date" column="reg_date" />
+		<result property="update_date" column="update_date" />
+		<result property="latitude" column="latitude" />
+		<result property="longitude" column="longitude" />
+		<result property="scale" column="scale" />
+	</resultMap>
+	
+	
+	<select id="getAllMaps" resultMap="rm4MapVO">
+		<![CDATA[
+			select id, name, half_court_num, full_court_num, address, user_id, content, latitude, longitude
+			from tbl_court
+		]]>
+	</select>
+	
+	<select id="getMarkers" resultMap="rm4MapVO">
+		<![CDATA[
+			select id, name, half_court_num, full_court_num, address, user_id, content, latitude, longitude, scale
+			from tbl_court
+			where scale > #{scale}
+				and latitude BETWEEN #{swLat} AND #{neLat}
+				and longitude BETWEEN #{swLng} AND #{neLng}
+		]]>
+	</select>
+	<insert id="insertMap">
+		<selectKey keyProperty="id" resultType="int" order="BEFORE">
+			select seq_court.nextval FROM DUAL
+		</selectKey>
+  		INSERT INTO tbl_court(id, name, half_court_num, full_court_num, address, user_id, content, latitude, longitude, scale)
+		VALUES(#{id}, #{name}, #{half_court_num}, #{full_court_num}, #{address}, #{user_id}, #{content}, #{latitude}, #{longitude}, '6')
+	</insert>
+	
+	
+</mapper>
+
+
+
+
+
+
+
+

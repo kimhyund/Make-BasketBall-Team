@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC 
+"-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="www.cwb.com.party.Member.mapper.MemberMapper">
+	<resultMap id="rm4MemberVO" type="www.cwb.com.party.Member.vo.MemberVO">
+		<id property="id" column="pid" />
+		<result property="discriminator" column="discriminator" />
+		<result property="password" column="password" />
+		<result property="name" column="name" />
+		<result property="phoneNumber" column="phone" />
+		<result property="email" column="email" />
+		<result property="height" column="height" />
+		<result property="grade" column="grade" />
+		<result property="address" column="address" />
+		<result property="nickName" column="nickname" />
+		<result property="position" column="position" />
+		<result property="gender" column="gender" />
+		<result property="regdate" column="regdate" />
+		<result property="updatedate" column="updatedate" />
+		<result property="enabled" column="enabled" />
+		<result property="reason" column="reason" />
+		<collection property="teamLists"
+		    column="team_id"
+		    javaType="java.util.ArrayList"
+		    resultMap="www.cwb.com.party.Chat.mapper.ChatMapper.rm4ChatVO">
+		</collection>
+		<collection property="requestLists"
+		    column="user_id"
+		    javaType="java.util.ArrayList"
+		    resultMap="www.cwb.com.party.Chat.mapper.ChatMapper.rm4ChatVO">
+		</collection>
+		<collection property="authList" 
+		    column="u_id"
+		    javaType="java.util.ArrayList"
+		    resultMap="rm4AuthVO">
+		</collection>
+	</resultMap>
+	<resultMap type="www.cwb.com.party.model.AuthVO" id="rm4AuthVO">
+		<id property="id" column="u_id" />
+	    <result property="authority" column="u_authority" />
+	</resultMap>
+	
+	<select id="read" resultMap="rm4MemberVO">
+		SELECT *
+		from tbl_party p, tbl_auth a
+		WHERE p.pid = #{id}
+	 	 and p.pid = a.u_id (+)
+	</select>
+	<select id="getMember" resultMap="rm4MemberVO">
+		<![CDATA[
+			select * from tbl_party where pid = #{id}
+		]]>
+	</select>
+	
+	<select id="getAllMember" resultMap="rm4MemberVO">
+		<![CDATA[
+			select p.pid, discriminator,password, name, phone, email, height, grade, address, nickname, position, gender from tbl_party p
+		]]>
+	</select>
+	
+	<select id="getMemberTwoLatest" resultMap="rm4MemberVO">
+		<![CDATA[
+			select * from tbl_party where rownum > (
+				select max(rownum)-2 from tbl_party
+			)
+		]]>
+	</select>
+	<select id="getRequest" resultMap="rm4MemberVO">
+		SELECT *
+		from tbl_party p, tbl_chat c
+		WHERE c.teamLeaderId = #{id}
+			and p.pid = c.user_id(+)
+			and c.isRequest = 'Y'
+			
+	</select>
+	
+	<select id="getTeam" resultMap="www.cwb.com.party.Chat.mapper.ChatMapper.rm4ChatVO">
+		SELECT *
+		from tbl_party p, tbl_chat c
+		WHERE c.user_id = #{id}
+			and p.pid = c.user_id(+)
+			and c.isRequest = 'N'
+	</select>
+	
+	
+	
+ 	<!-- CRUD Pattern에 맞춰서 Insert/Select/Update/Delete순으로 배치 -->
+	<insert id="insertMember">
+  		INSERT INTO tbl_party(pid, discriminator, password, height, grade, address, nickname, position, gender)
+		VALUES(#{id,jdbcType=VARCHAR}, 'M', #{password,jdbcType=VARCHAR}, #{height}, 
+					#{grade}, #{address,jdbcType=VARCHAR}, #{nickName,jdbcType=VARCHAR}, 
+					#{position,jdbcType=VARCHAR}, #{gender,jdbcType=VARCHAR})
+	</insert>
+
+	<update id="updateMember">
+		<selectKey keyProperty="updatedate" resultType="date" order="BEFORE">
+			SELECT sysdate FROM DUAL
+		</selectKey>
+		<![CDATA[
+			UPDATE tbl_party
+			      SET pid = #{id}, 
+			   	    	password = #{password}, 
+			   	    	height = #{height}, 
+			   	    	grade = #{grade}, 
+			   	    	address = #{address}, 
+			   	    	nickname = #{nickName}, 
+			   	    	position = #{position}, 
+			   	    	gender = #{gender}, 
+			   	    	updatedate = #{updatedate}
+		   WHERE pid = #{id}
+		]]>
+	</update>
+	
+	<update id="updateProfile">
+  		<selectKey keyProperty="updatedate" resultType="date" order="BEFORE">
+			SELECT sysdate FROM DUAL
+		</selectKey>
+  		<![CDATA[
+			UPDATE tbl_party
+			      SET height = #{height}, 
+			   	    	address = #{address}, 
+			   	    	nickname = #{nickName}, 
+			   	    	position = #{position}, 
+			   	    	gender = #{gender}, 
+			   	    	updatedate = #{updatedate}
+		     WHERE pid = #{id}
+		]]>
+	</update>
+	
+	<update id="deleteMember">
+		<selectKey keyProperty="updatedate" resultType="date" order="BEFORE">
+			SELECT sysdate FROM DUAL
+		</selectKey>
+		<![CDATA[
+			UPDATE tbl_party
+			      SET enabled = '0', 
+		 	      		reason = #{reason},
+			   	    	update_date = #{updatedate}
+		     WHERE pid = #{id}
+		]]>
+	</update>
+
+</mapper>
+

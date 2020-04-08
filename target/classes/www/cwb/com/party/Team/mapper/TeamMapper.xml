@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC 
+"-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="www.cwb.com.party.Team.mapper.TeamMapper">
+	<resultMap id="rm4TeamVO" type="www.cwb.com.party.Team.vo.TeamVO">
+		<id property="teamName" column="pid" />
+		<result property="discriminator" column="discriminator" />
+		<result property="address" column="address" />
+		<result property="win" column="win" />
+		<result property="draw" column="draw" />
+		<result property="lose" column="lose" />
+		<result property="winningRate" column="winning_rate" />
+		<result property="num_member" column="num_member" />
+		<result property="description" column="description" />
+		<result property="regdate" column="regdate" />
+		<result property="updatedate" column="updatedate" />
+		<result property="leader" column="leader" />
+		
+		<collection property="memberList" 
+		    column="user_id"
+		    javaType="java.util.ArrayList"
+		    resultMap="www.cwb.com.party.Chat.mapper.ChatMapper.rm4ChatVO">
+		</collection>
+	</resultMap>
+
+	<sql id="criteria">
+		<trim prefix="(" suffix = ")" prefixOverrides="or">
+			<foreach collection="cri.getSearchTypeArr()" item="val">
+				<trim prefix="or">
+					<if test="val=='C'.toString()">
+						content like #{cri.keyword} || '%'
+					</if>
+					<if test="val=='T'.toString()">
+						title like #{cri.keyword} || '%'
+					</if>
+					<if test="val=='W'.toString()">
+						writer like #{cri.keyword} || '%'
+					</if>
+					<if test="val=='G'.toString()">
+						type like #{cri.keyword} || '%'
+					</if>
+					
+				</trim>
+			</foreach> 
+		</trim>
+	</sql>
+	
+	<select id="getTeam" resultMap="rm4TeamVO">
+		SELECT *
+		from tbl_party p, tbl_chat c
+		WHERE p.pid = #{teamName}
+			and discriminator = 'T'
+			and c.isRequest = 'N'
+			and p.pid = c.team_id(+)
+	</select>
+	
+	<select id="getListTeam" resultMap="rm4TeamVO">
+		SELECT *
+		from tbl_party p, tbl_chat c
+		WHERE discriminator = 'T'
+			AND p.pid = c.team_id(+)
+	</select>
+
+ 	<!-- CRUD Pattern에 맞춰서 Insert/Select/Update/Delete순으로 배치 -->
+ 	<!-- 팀이름은 db의 id 속성으로, 팀생성자는 leader로 재적한다 -->
+	<insert id="createTeam">
+		<selectKey keyProperty="cid" resultType="String" order="BEFORE">
+				SELECT seq_court.NEXTVAL FROM DUAL
+		</selectKey>
+	  		INSERT ALL
+		  		INTO tbl_party(pid, password, discriminator,address, win, draw, lose, num_member, description, leader)
+				VALUES(#{teamName,jdbcType=VARCHAR},'123456789', 'T',#{address,jdbcType=VARCHAR}, '0', '0', '0', '1', #{description,jdbcType=VARCHAR}, #{leader,jdbcType=VARCHAR})
+				INTO tbl_chat(id, team_id, user_id, isRequest, teamLeaderId)
+				VALUES (#{cid},#{teamName,jdbcType=VARCHAR},#{leader,jdbcType=VARCHAR} ,'N',#{leader,jdbcType=VARCHAR})
+			SELECT *
+			FROM dual
+	</insert>
+
+	<update id="updateMemberCount">
+		<![CDATA[
+			update tbl_party
+			   set num_member = num_member + #{amount}
+ 			 where pid = #{pid}
+		]]>
+	</update>
+	
+	<select id="getTotalCount" resultType="int">
+		<![CDATA[
+			select count(*) from tbl_party
+		]]>
+			<where>
+				<include refid="criteria"/> 
+			</where>
+	</select>
+	
+	<select id="getListWithPagingByCondition" resultMap="rm4TeamVO">
+	    select y.*
+		from (
+			select x.*, rownum rn
+			from (
+				select * 
+				from tbl_party p, tbl_chat c
+				where discriminator = 'T'
+				and p.pid = c.team_id(+)
+				 order by UPDATEDATE desc
+				 ) x
+			<where>
+				<include refid="criteria"/> 
+				<![CDATA[ 
+				and rownum <= #{cri.pageNum}*#{cri.amount}) y
+				]]>
+			</where>
+		<![CDATA[
+			 where rn > (#{cri.pageNum} - 1) * #{cri.amount}
+		]]>
+	</select>
+	
+	<!-- 팀 글내용 수정 -->	
+	<update id="updateTeam">
+	    <selectKey keyProperty="updatedate" resultType="date" order="BEFORE">
+			select sysdate FROM DUAL
+		</selectKey>
+		<![CDATA[
+			update tbl_party
+			   set	description = #{description},
+			   	updatedate = #{updatedate}
+ 			 where pid = #{teamName}
+		]]>
+	</update>
+
+	<!-- 팀창 삭제 -->
+	<delete id="deleteTeam">
+		<![CDATA[
+			delete from tbl_party where pid=#{teamName}
+		]]>
+	</delete>
+
+</mapper>
+
+
+
+
+
+
+
+

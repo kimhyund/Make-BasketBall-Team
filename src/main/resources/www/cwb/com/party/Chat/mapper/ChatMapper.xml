@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC 
+"-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="www.cwb.com.party.Chat.mapper.ChatMapper">
+	<resultMap id="rm4ChatVO" type="www.cwb.com.party.Chat.vo.ChatVO">
+		<id property="id" column="id" />
+		<result property="team_id" column="team_id" />
+		<result property="user_id" column="user_id" />
+		<result property="content" column="content" />
+		<result property="isRequest" column="isRequest" />
+		<result property="teamLeaderId" column="teamLeaderId" />
+		<result property="join_state" column="join_state" />
+		<result property="reg_date" column="reg_date" />
+	</resultMap>
+	    
+	<insert id="joinRequest">
+	    <selectKey keyProperty="id" resultType="String" order="BEFORE">
+			SELECT seq_court.NEXTVAL FROM DUAL
+		</selectKey>
+  		 insert INTO tbl_chat(id, team_id,user_id,content, isRequest, teamLeaderId)
+  		 			VALUES (#{id},#{team_id,jdbcType=VARCHAR},
+  		 			#{user_id,jdbcType=VARCHAR},#{content,jdbcType=VARCHAR},'Y',
+  		 			#{teamLeaderId,jdbcType=VARCHAR})
+	</insert>
+	
+	<update id="rqApproved">
+		<![CDATA[
+			UPDATE tbl_chat
+			      SET isRequest = 'N'
+		     WHERE user_id = #{user_id,jdbcType=VARCHAR}
+		     	and team_id = #{team_id,jdbcType=VARCHAR}
+		     	and isRequest = 'Y'
+		]]>
+	</update>
+	
+	<delete id="rqRejected">
+		<![CDATA[
+			delete from tbl_chat 
+			where user_id = #{user_id,jdbcType=VARCHAR}
+				and team_id = #{team_id,jdbcType=VARCHAR}
+				and isRequest = 'Y'
+		]]>
+	</delete>
+	
+	<select id="requestCheck" resultMap="rm4ChatVO">
+	    select * from tbl_chat
+	    where user_id = #{user_id,jdbcType=VARCHAR}
+	    	and team_id = #{team_id,jdbcType=VARCHAR}
+	    	and	isRequest = 'Y'
+	</select>
+	
+	<delete id="deleteTeam">
+		<![CDATA[
+			delete from tbl_chat where team_id=#{team_id}
+		]]>
+	</delete>
+	
+</mapper>
+
+
+
+
+
+
+
+

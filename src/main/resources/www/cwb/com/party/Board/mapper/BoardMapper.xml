@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC 
+"-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="www.cwb.com.party.Board.mapper.BoardMapper">
+	<resultMap id="rm4BoardVO"
+		type="www.cwb.com.party.Board.vo.BoardVO">
+		<id property="bno" column="bno" />
+		<result property="title" column="title" />
+		<result property="content" column="content" />
+		<result property="writer" column="writer" />
+		<result property="regdate" column="regdate" />
+		<result property="updatedate" column="updatedate" />
+		<result property="replyCount" column="reply_cnt" />
+		<result property="type" column="type" />
+		<result property="address" column="address" />
+		<collection property="listAttach" 
+			column="master_id" 
+			javaType="java.util.ArrayList"
+			resultMap="www.cwb.com.framework.fileupload.mapper.AttachMapper.rm4AttachVO"
+		/>
+	</resultMap>
+	
+	<sql id="criteria">
+		<trim prefix="(" suffix = ")" prefixOverrides="or">
+			<foreach collection="cri.getSearchTypeArr()" item="val">
+				<trim prefix="or">
+					<if test="val=='C'.toString()">
+						content like #{cri.keyword} || '%'
+					</if>
+					<if test="val=='T'.toString()">
+						title like #{cri.keyword} || '%'
+					</if>
+					<if test="val=='W'.toString()">
+						writer like #{cri.keyword} || '%'
+					</if>
+					<if test="val=='G'.toString()">
+						type like #{cri.keyword} || '%'
+					</if>
+					
+				</trim>
+			</foreach> 
+		</trim>
+	</sql>
+	
+	<select id="getTotalCount" resultType="int">
+		<![CDATA[
+			select count(*) from tbl_board
+		]]>
+			<where>
+				<include refid="criteria"/> 
+			</where>
+				order by bno desc
+		
+	</select>
+
+	<select id="getAllBoard" resultMap="rm4BoardVO">
+		<![CDATA[
+			select * from tbl_board where bno > 0
+		]]>
+	</select>
+
+	<select id="getListWithPaging" resultMap="rm4BoardVO">
+		<![CDATA[
+			select * 
+			  from (
+			  	select rownum rn, bno, title, content, writer, regdate, updatedate, reply_cnt
+			  	  from tbl_board
+			  	 where rownum <= #{pageNum} * #{amount}
+			  )
+			 where rn > (#{pageNum} - 1) * #{amount}
+		]]>
+	</select>
+
+<!-- p332에서 paging까지 추가적으로 고려한 동적 sql예시 -->
+	<select id="getListWithPagingByCondition" resultMap="rm4BoardVO">
+		select * from (
+		  	select rownum rn, bno, title, content, writer, regdate, updatedate, reply_cnt, type, address
+		  	  from tbl_board
+			<where>
+				<include refid="criteria"/> 
+				<![CDATA[
+				and rownum <= #{cri.pageNum} * #{cri.amount}
+				order by bno desc
+				]]>
+			</where>
+		)
+		<![CDATA[
+			 where rn > (#{cri.pageNum} - 1) * #{cri.amount}
+		]]>
+		<![CDATA[
+		]]>
+	</select>
+
+
+	<select id="getBoard" resultMap="rm4BoardVO">
+		<![CDATA[
+			select * 
+			  from tbl_board b, tbl_attach a 
+			 where b.bno = #{bno}
+			   and b.bno = a.master_id(+)
+			   and #{masterName} = a.master_name(+)
+		]]>
+	</select>
+
+	<select id="getBoardLatest" resultMap="rm4BoardVO">
+		<![CDATA[
+			select * from tbl_board where bno = (
+				select max(bno) from tbl_board
+			)
+		]]>
+	</select>
+
+	<select id="getBoardTwoLatest" resultMap="rm4BoardVO">
+		<![CDATA[
+			select * from tbl_board where bno > (
+				select max(bno) from tbl_board
+			) - 2
+		]]>
+	</select>
+	
+	<insert id="insertBoard">
+		<!-- 생성된 identifier가 주어진 객체에 자동적으로 채워진다. -->
+		<selectKey keyProperty="bno" resultType="int" order="BEFORE">
+			select seq_board.nextval FROM DUAL
+		</selectKey>
+  		insert into tbl_board(bno, title, content, writer, type, address, reply_cnt)
+		  values(#{bno}, #{title,jdbcType=VARCHAR},
+		   #{content,jdbcType=VARCHAR}, #{writer,jdbcType=VARCHAR}, #{type,jdbcType=VARCHAR}, #{address,jdbcType=VARCHAR}, '0')
+	</insert>
+
+	<update id="updateBoard">
+		<selectKey keyProperty="updatedate" resultType="date" order="BEFORE">
+			select sysdate FROM DUAL
+		</selectKey>
+		<![CDATA[
+			update tbl_board
+			   set title = #{title},
+				   content = #{content},
+				   writer = #{writer},
+				   updatedate = #{updatedate}
+ 			 where bno = #{bno}
+		]]>
+	</update>
+	<update id="updateReplyCount">
+		<![CDATA[
+			update tbl_board
+			   set reply_cnt = reply_cnt + #{amount}
+ 			 where bno = #{bno}
+		]]>
+	</update>
+	
+	<delete id="deleteBoard">
+		<![CDATA[
+			delete from tbl_board where bno=#{bno}
+		]]>
+	</delete>
+	
+	<delete id="deleteBoardByColl">
+		<![CDATA[
+			delete from tbl_board where bno in 
+		]]>
+		<foreach item="bno" collection="list"
+			open="(" separator="," close=")">
+			#{bno}
+		</foreach>
+	</delete>
+
+</mapper>
+
+
+
+
+
+
+
+

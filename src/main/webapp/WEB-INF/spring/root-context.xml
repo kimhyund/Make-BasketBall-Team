@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:c="http://www.springframework.org/schema/c"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xsi:schemaLocation="http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd">
+	
+	<!-- Root Context: defines shared resources visible to all other web components -->
+	<bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
+		<!-- property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"></property -->
+		<property name="driverClassName" value="net.sf.log4jdbc.sql.jdbcapi.DriverSpy"></property>
+		 
+		<property name="jdbcUrl" 
+			value="jdbc:log4jdbc:oracle:thin:@localhost:1521:orcl">
+		</property>
+		<property name="username" value="c##hd"></property>
+		<property name="password" value="1234"></property>
+	</bean>
+	
+	<bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+		<constructor-arg ref="hikariConfig"></constructor-arg>
+	</bean>
+
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	
+	<!-- mybatis-spring:scan base-package="www.spring.com.sample.mapper"/ -->
+	<!-- 너무 넓게 스케닝하면 서비스 빈 까지 mybatis proxy로 잡혀서 오류 발생됩니다. -->
+	<mybatis-spring:scan base-package="www.cwb.com.party.Chat.mapper"/>
+	<mybatis-spring:scan base-package="www.cwb.com.framework.fileupload.mapper"/>
+	<mybatis-spring:scan base-package="www.cwb.com.party.Board.mapper"/>
+	<mybatis-spring:scan base-package="www.cwb.com.party.Map.mapper"/>
+	<mybatis-spring:scan base-package="www.cwb.com.party.Member.mapper"/>
+	<mybatis-spring:scan base-package="www.cwb.com.party.Team.mapper"/>
+	
+	<context:component-scan base-package="www.cwb.com"></context:component-scan>
+	<context:component-scan base-package="www.cwb.com.party"></context:component-scan>
+	<context:component-scan base-package="www.cwb.com.framework"></context:component-scan>
+	<context:component-scan base-package="www.cwb.com.party.Board.service"></context:component-scan>
+	<context:component-scan base-package="www.cwb.com.party.Member.service"></context:component-scan>
+	<context:component-scan base-package="www.cwb.com.party.Team.service"></context:component-scan>
+	<!--<context:component-scan base-package="www.cwb.com.party.map.service"></context:component-scan>  -->
+	
+
+</beans>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

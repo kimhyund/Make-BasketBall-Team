@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.2.xsd">
+	<!--<bean id="customAccessDenied"
+		class="www.spring.com.security.CustomAccessDeniedHandler ">
+	</bean>  -->
+	
+	<bean id="customLoginSuccess"
+		class="www.cwb.com.security.CustomLoginSuccessHandler ">
+	</bean>
+	<bean id="bcryptPasswordEncoder"
+		class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder" />
+	<bean id="customUserDetailService"
+		class="www.cwb.com.security.CustomUserDetailService ">
+	</bean>
+	
+	<security:http>
+		<security:intercept-url pattern="/log/all"
+			access="permitAll" />
+		<security:csrf disabled ="true"/>
+		<security:form-login login-page="/customLogin" />
+		<security:logout logout-url="/customLogout" invalidate-session="true" />
+
+	</security:http>
+
+	<security:authentication-manager>
+		<security:authentication-provider
+			user-service-ref="customUserDetailService">
+			<!-- <security:user-service> <security:user name="member" password="member" 
+				authorities="ROLE_MEMBER"/> <security:user name="admin" password="admin" 
+				authorities="ROLE_MEMBER, ROLE_ADMIN"/> </security:user-service> -->
+			<security:password-encoder
+				ref="bcryptPasswordEncoder" />
+		</security:authentication-provider>
+	</security:authentication-manager>
+
+
+</beans>
